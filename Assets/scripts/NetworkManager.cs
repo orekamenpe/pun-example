@@ -7,6 +7,8 @@ public class NetworkManager : MonoBehaviour {
 	private const string roomName = "RoomName";
 	private RoomInfo[] roomsList;
 
+    public GameObject playerPrefab;
+
 	// Use this for initialization
 	void Start () {
 		PhotonNetwork.ConnectUsingSettings("0.1");
@@ -52,5 +54,8 @@ public class NetworkManager : MonoBehaviour {
 	void OnJoinedRoom()
 	{
 		Debug.Log("Connected to Room");
+
+        // Spawn player
+        PhotonNetwork.Instantiate(playerPrefab.name, Vector3.up * 5, Quaternion.identity, 0);
 	}
 }
