@@ -7,6 +7,12 @@ public class playerController : MonoBehaviour {
 	private Rigidbody rgbody;
     private PhotonView photonView;
 
+    private float lastSynchronizationTime = 0f;
+    private float syncDelay = 0f;
+    private float syncTime = 0f;
+    private Vector3 syncStartPosition = Vector3.zero;
+    private Vector3 syncEndPosition = Vector3.zero;
+
     void Start()
 	{
         rgbody = GetComponent<Rigidbody>();
@@ -14,9 +20,17 @@ public class playerController : MonoBehaviour {
 	}
 	
 	// Update is called once per frame
-	void Update () {
+	void Update ()
+    {
         if (photonView.isMine)
-		InputMovement ();
+        {
+            InputMovement();
+        }
+        else
+        {
+            SyncedMovement();
+        }
+		
 	}
 
 	void InputMovement()
@@ -34,15 +48,30 @@ public class playerController : MonoBehaviour {
             rgbody.MovePosition(rgbody.position - Vector3.right * speed * Time.deltaTime);
 	}
 
+    private void SyncedMovement()
+    {
+        syncTime += Time.deltaTime;
+        rgbody.position = Vector3.Lerp(syncStartPosition, syncEndPosition, syncTime / syncDelay);
+    }
+
     void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
     {
         if (stream.isWriting)
         {
             stream.SendNext(rgbody.position);
+            stream.SendNext(rgbody.velocity);
         }
         else
         {
-            rgbody.position = (Vector3)stream.ReceiveNext();
+            Vector3 syncPosition = (Vector3)stream.ReceiveNext();
+            Vector3 syncVelocity = (Vector3)stream.ReceiveNext();
+
+            syncTime = 0f;
+            syncDelay = Time.time - lastSynchronizationTime;
+            lastSynchronizationTime = Time.time;
+
+            syncEndPosition = syncPosition + syncVelocity * syncDelay;
+            syncStartPosition = rgbody.position;
         }
     }
 }
