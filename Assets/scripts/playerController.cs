@@ -4,12 +4,12 @@ using System.Collections;
 public class playerController : MonoBehaviour {
 
 	public float speed = 10.0f;
-	private Rigidbody rigidbody;
+	private Rigidbody rgbody;
     private PhotonView photonView;
 
-	void Start()
+    void Start()
 	{
-		rigidbody = GetComponent<Rigidbody>();
+        rgbody = GetComponent<Rigidbody>();
         photonView = GetComponent<PhotonView>();
 	}
 	
@@ -22,15 +22,27 @@ public class playerController : MonoBehaviour {
 	void InputMovement()
 	{
 		if (Input.GetKey(KeyCode.W))
-			rigidbody.MovePosition (rigidbody.position + Vector3.forward * speed * Time.deltaTime);
+            rgbody.MovePosition (rgbody.position + Vector3.forward * speed * Time.deltaTime);
 
 		if (Input.GetKey(KeyCode.S))
-			rigidbody.MovePosition(rigidbody.position - Vector3.forward * speed * Time.deltaTime);
+            rgbody.MovePosition(rgbody.position - Vector3.forward * speed * Time.deltaTime);
 
 		if (Input.GetKey(KeyCode.D))
-			rigidbody.MovePosition(rigidbody.position + Vector3.right * speed * Time.deltaTime);
+            rgbody.MovePosition(rgbody.position + Vector3.right * speed * Time.deltaTime);
 
 		if (Input.GetKey(KeyCode.A))
-			rigidbody.MovePosition(rigidbody.position - Vector3.right * speed * Time.deltaTime);
+            rgbody.MovePosition(rgbody.position - Vector3.right * speed * Time.deltaTime);
 	}
+
+    void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
+    {
+        if (stream.isWriting)
+        {
+            stream.SendNext(rgbody.position);
+        }
+        else
+        {
+            rgbody.position = (Vector3)stream.ReceiveNext();
+        }
+    }
 }

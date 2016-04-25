@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System;
+using Random = UnityEngine.Random;
 
 public class NetworkManager : MonoBehaviour {
 
@@ -10,8 +11,23 @@ public class NetworkManager : MonoBehaviour {
     public GameObject playerPrefab;
 
 	// Use this for initialization
-	void Start () {
-		PhotonNetwork.ConnectUsingSettings("0.1");
+	void Awake ()
+    {
+        // this makes sure we can use PhotonNetwork.LoadLevel() on the master client and all clients in the same room sync their level automatically
+        PhotonNetwork.automaticallySyncScene = true;
+
+        // the following line checks if this client was just created (and not yet online). if so, we connect
+        if (PhotonNetwork.connectionStateDetailed == PeerState.PeerCreated)
+        {
+            // Connect to the photon master-server. We use the settings saved in PhotonServerSettings (a .asset file in this project)
+            PhotonNetwork.ConnectUsingSettings("0.9");
+        }
+
+        // generate a name for this player, if none is assigned yet
+        if (String.IsNullOrEmpty(PhotonNetwork.playerName))
+        {
+            PhotonNetwork.playerName = "Guest" + Random.Range(1, 9999);
+        }
 	}
 	
 	// Update is called once per frame
@@ -51,6 +67,7 @@ public class NetworkManager : MonoBehaviour {
 	{
 		roomsList = PhotonNetwork.GetRoomList();
 	}
+
 	void OnJoinedRoom()
 	{
 		Debug.Log("Connected to Room");
