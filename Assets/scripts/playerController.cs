@@ -1,10 +1,12 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 
 public class playerController : MonoBehaviour {
 
 	public float speed = 10.0f;
 	private Rigidbody rgbody;
+    private Renderer render;
+
     private PhotonView photonView;
 
     private float lastSynchronizationTime = 0f;
@@ -16,6 +18,8 @@ public class playerController : MonoBehaviour {
     void Start()
 	{
         rgbody = GetComponent<Rigidbody>();
+        render = GetComponent<Renderer>();
+
         photonView = GetComponent<PhotonView>();
 	}
 	
@@ -25,6 +29,7 @@ public class playerController : MonoBehaviour {
         if (photonView.isMine)
         {
             InputMovement();
+            InputColorChange();
         }
         else
         {
@@ -52,6 +57,21 @@ public class playerController : MonoBehaviour {
     {
         syncTime += Time.deltaTime;
         rgbody.position = Vector3.Lerp(syncStartPosition, syncEndPosition, syncTime / syncDelay);
+    }
+
+    private void InputColorChange()
+    {
+        if (Input.GetKeyDown(KeyCode.R))
+            ChangeColorTo(new Vector3(Random.Range(0f, 1f), Random.Range(0f, 1f), Random.Range(0f, 1f)));
+    }
+
+    [PunRPC]
+    void ChangeColorTo(Vector3 color)
+    {
+        render.material.color = new Color(color.x, color.y, color.z, 1f);
+
+        if (photonView.isMine)
+            photonView.RPC("ChangeColorTo", PhotonTargets.OthersBuffered, color);
     }
 
     void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
