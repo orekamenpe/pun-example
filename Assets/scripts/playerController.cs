@@ -52,8 +52,12 @@ public class playerController : Photon.MonoBehaviour {
 
     private void SyncedMovement()
     {
-        syncTime += Time.deltaTime;
-        rgbody.position = Vector3.Lerp(syncStartPosition, syncEndPosition, syncTime / syncDelay);
+        if (syncEndPosition != Vector3.zero) // TODO: fix this
+        {
+            syncTime += Time.deltaTime;
+            rgbody.position = Vector3.Lerp(syncStartPosition, syncEndPosition, syncTime / syncDelay);
+        }
+        
     }
 
     private void InputColorChange()
