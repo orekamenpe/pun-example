@@ -5,14 +5,17 @@ public class playerController : MonoBehaviour {
 
 	public float speed = 10.0f;
 	private Rigidbody rigidbody;
+    private PhotonView photonView;
 
 	void Start()
 	{
 		rigidbody = GetComponent<Rigidbody>();
+        photonView = GetComponent<PhotonView>();
 	}
 	
 	// Update is called once per frame
 	void Update () {
+        if (photonView.isMine)
 		InputMovement ();
 	}
 
