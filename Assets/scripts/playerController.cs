@@ -1,13 +1,12 @@
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections;
 
-public class playerController : MonoBehaviour {
+public class playerController : Photon.MonoBehaviour {
 
 	public float speed = 10.0f;
 	private Rigidbody rgbody;
     private Renderer render;
 
-    private PhotonView photonView;
 
     private float lastSynchronizationTime = 0f;
     private float syncDelay = 0f;
@@ -19,8 +18,6 @@ public class playerController : MonoBehaviour {
 	{
         rgbody = GetComponent<Rigidbody>();
         render = GetComponent<Renderer>();
-
-        photonView = GetComponent<PhotonView>();
 	}
 	
 	// Update is called once per frame
