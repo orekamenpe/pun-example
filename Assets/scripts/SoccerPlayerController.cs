@@ -3,7 +3,7 @@ using System.Collections;
 
 public class SoccerPlayerController : Photon.MonoBehaviour {
 
-    public float speed = 10.0f;
+    public float speed = 5.0f;
     private Rigidbody rgbody;
 
     // Use this for initialization
@@ -41,7 +41,7 @@ public class SoccerPlayerController : Photon.MonoBehaviour {
             Quaternion deltaRotation = Quaternion.Euler(new Vector3(0,-5, 0));
             rgbody.MoveRotation(rgbody.rotation * deltaRotation);
         }
-
     }
+
 
 }

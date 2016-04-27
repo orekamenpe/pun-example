@@ -61,4 +61,15 @@ public class PlayerNetworkMover : Photon.MonoBehaviour
         }
     }
 
+
+    [PunRPC]
+    public void takeBall()
+    {
+        SoccerGameManager.instance.soccerBall.holdBall(this.gameObject);
+
+        if (photonView.isMine)
+        {
+            photonView.RPC("takeBall", PhotonTargets.OthersBuffered, null );
+        }   
+    }
 }
