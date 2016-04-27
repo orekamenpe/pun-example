@@ -7,18 +7,25 @@ using Random = UnityEngine.Random;
 public class NetworkManager : MonoBehaviour 
 {
     [SerializeField] Text connectionText;
-    [SerializeField] Transform[] spawnPoints;
+    [SerializeField] Transform localSpawnPoint;
+    [SerializeField] Transform VisitorSpawnPoint;
 
     [SerializeField] GameObject serverWindow;
     [SerializeField] InputField username;
     [SerializeField] InputField roomName;
     [SerializeField] InputField roomList;
-    [SerializeField] InputField messageWindow;
+    [SerializeField] Text messageWindow;
 
     GameObject player;
     Queue<string> messages;
     const int messageCount = 6;
     PhotonView photonView;
+
+    [SerializeField]
+    Material localMaterial;
+    [SerializeField]
+    Material visitorMaterial;
+
 
 
     void Start () 
@@ -67,7 +74,7 @@ public class NetworkManager : MonoBehaviour
     public void JoinRoom()
     {
         PhotonNetwork.player.name = username.text;
-        RoomOptions roomOptions = new RoomOptions(){ isVisible = true, maxPlayers = 10 };
+        RoomOptions roomOptions = new RoomOptions(){ isVisible = true, maxPlayers = 2 };
         PhotonNetwork.JoinOrCreateRoom (roomName.text, roomOptions, TypedLobby.Default);
     }
 
@@ -88,10 +95,19 @@ public class NetworkManager : MonoBehaviour
     {
         yield return new WaitForSeconds(respawnTime);
 
-        int index = Random.Range (0, spawnPoints.Length);
-        player = PhotonNetwork.Instantiate("SoccerPlayer", spawnPoints[index].position, spawnPoints[index].rotation, 0);
+        Vector3 startPosition = localSpawnPoint.position;
+        Material soccerClub = localMaterial;
+
+        if (PhotonNetwork.GetRoomList().Length > 0)  
+        {
+            startPosition = VisitorSpawnPoint.position;
+            soccerClub = visitorMaterial;
+        }
+        player = PhotonNetwork.Instantiate("SoccerPlayer", startPosition, Quaternion.identity, 0);
         player.GetComponent<PlayerNetworkMover> ().RespawnMe += StartSpawnProcess;
         player.GetComponent<PlayerNetworkMover> ().SendNetworkMessage += AddMessage;
+
+        player.GetComponent<Renderer>().material = soccerClub;
 
         AddMessage ("Spawned player: " + PhotonNetwork.player.name);
     }
