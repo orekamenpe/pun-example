@@ -1,78 +1,115 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
-using System;
+using UnityEngine.UI;
+using System.Collections.Generic;
 using Random = UnityEngine.Random;
 
-public class NetworkManager : MonoBehaviour {
+public class NetworkManager : MonoBehaviour 
+{
+    [SerializeField] Text connectionText;
+    [SerializeField] Transform[] spawnPoints;
 
-	private const string roomName = "RoomName";
-	private RoomInfo[] roomsList;
+    [SerializeField] GameObject serverWindow;
+    [SerializeField] InputField username;
+    [SerializeField] InputField roomName;
+    [SerializeField] InputField roomList;
+    [SerializeField] InputField messageWindow;
 
-    public GameObject playerPrefab;
+    GameObject player;
+    Queue<string> messages;
+    const int messageCount = 6;
+    PhotonView photonView;
 
-	// Use this for initialization
-	void Awake ()
+
+    void Start () 
     {
-        // this makes sure we can use PhotonNetwork.LoadLevel() on the master client and all clients in the same room sync their level automatically
-        PhotonNetwork.automaticallySyncScene = true;
+        photonView = GetComponent<PhotonView> ();
+        messages = new Queue<string> (messageCount);
 
-        // the following line checks if this client was just created (and not yet online). if so, we connect
-        if (PhotonNetwork.connectionStateDetailed == PeerState.PeerCreated)
+        PhotonNetwork.logLevel = PhotonLogLevel.Full;
+        PhotonNetwork.ConnectUsingSettings ("1.0");
+        StartCoroutine ("UpdateConnectionString");
+    }
+
+    IEnumerator UpdateConnectionString () 
+    {
+        while(true)
         {
-            // Connect to the photon master-server. We use the settings saved in PhotonServerSettings (a .asset file in this project)
-            PhotonNetwork.ConnectUsingSettings("0.1");
+            connectionText.text = PhotonNetwork.connectionStateDetailed.ToString ();
+            yield return null;
         }
+    }
 
-        // generate a name for this player, if none is assigned yet
-        if (String.IsNullOrEmpty(PhotonNetwork.playerName))
+    void OnJoinedLobby()
+    {
+        serverWindow.SetActive (true);
+
+        // random Name
+        username.text = "Guest" + Random.Range(1, 9999);
+        if (roomList.text != "")
         {
-            PhotonNetwork.playerName = "Guest" + Random.Range(1, 9999);
+            roomName.text = roomList.text;
         }
-	}
-	
-	// Update is called once per frame
-	void Update () {
-	
-	}
+        else
+        {
+            roomName.text = "room1";
+        }
+    }
 
-	void OnGUI()
-	{
-		if (!PhotonNetwork.connected)
-		{
-			GUILayout.Label(PhotonNetwork.connectionStateDetailed.ToString());
-		}
-		else if (PhotonNetwork.room == null)
-		{
-			// Create Room
-			if (GUI.Button(new Rect(100, 100, 250, 100), "Start Server"))
-            {
-                PhotonNetwork.CreateRoom(roomName + Guid.NewGuid().ToString("N"), new RoomOptions() { maxPlayers = 5 }, null);
-            }
+    void OnReceivedRoomListUpdate()
+    {
+        roomList.text = "";
+        RoomInfo[] rooms = PhotonNetwork.GetRoomList ();
+        foreach(RoomInfo room in rooms)
+            roomList.text += room.name + "\n";
+    }
 
-            // Join Room
-            if (roomsList != null)
-			{
-				for (int i = 0; i < roomsList.Length ; i++)
-				{
-					if (GUI.Button(new Rect(100, 250 + (110 * i), 250, 100), "Join " + roomsList[i].name))
-                    {
-                        PhotonNetwork.JoinRoom(roomsList[i].name);
-                    }	
-				}
-			}
-		}
-	}
+    public void JoinRoom()
+    {
+        PhotonNetwork.player.name = username.text;
+        RoomOptions roomOptions = new RoomOptions(){ isVisible = true, maxPlayers = 10 };
+        PhotonNetwork.JoinOrCreateRoom (roomName.text, roomOptions, TypedLobby.Default);
+    }
 
-	void OnReceivedRoomListUpdate()
-	{
-		roomsList = PhotonNetwork.GetRoomList();
-	}
+    void OnJoinedRoom()
+    {
+        serverWindow.SetActive (false);
+        StopCoroutine ("UpdateConnectionString");
+        connectionText.text = "";
+        StartSpawnProcess (0f);
+    }
 
-	void OnJoinedRoom()
-	{
-		Debug.Log("Connected to Room");
+    void StartSpawnProcess(float respawnTime)
+    {
+        StartCoroutine ("SpawnPlayer", respawnTime);
+    }
 
-        // Spawn player
-        PhotonNetwork.Instantiate(playerPrefab.name, Vector3.up, Quaternion.identity, 0);
-	}
+    IEnumerator SpawnPlayer(float respawnTime)
+    {
+        yield return new WaitForSeconds(respawnTime);
+
+        int index = Random.Range (0, spawnPoints.Length);
+        player = PhotonNetwork.Instantiate("SoccerPlayer", spawnPoints[index].position, spawnPoints[index].rotation, 0);
+        player.GetComponent<PlayerNetworkMover> ().RespawnMe += StartSpawnProcess;
+        player.GetComponent<PlayerNetworkMover> ().SendNetworkMessage += AddMessage;
+
+        AddMessage ("Spawned player: " + PhotonNetwork.player.name);
+    }
+
+    void AddMessage(string message)
+    {
+        photonView.RPC ("AddMessage_RPC", PhotonTargets.All, message);
+    }
+
+    [PunRPC]
+    void AddMessage_RPC(string message)
+    {
+        messages.Enqueue (message);
+        if(messages.Count > messageCount)
+            messages.Dequeue();
+
+        messageWindow.text = "";
+        foreach(string m in messages)
+            messageWindow.text += m + "\n";
+    }
 }
