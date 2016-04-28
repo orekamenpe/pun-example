@@ -26,7 +26,7 @@ public class NetworkManager : MonoBehaviour
     [SerializeField]
     Material visitorMaterial;
 
-
+    PunTeams punTeams;
 
     void Start () 
     {
@@ -36,6 +36,8 @@ public class NetworkManager : MonoBehaviour
         PhotonNetwork.logLevel = PhotonLogLevel.Full;
         PhotonNetwork.ConnectUsingSettings ("1.0");
         StartCoroutine ("UpdateConnectionString");
+
+        punTeams = GetComponent<PunTeams>();
     }
 
     IEnumerator UpdateConnectionString () 
@@ -98,11 +100,17 @@ public class NetworkManager : MonoBehaviour
         Vector3 startPosition = localSpawnPoint.position;
         Material soccerClub = localMaterial;
 
-        if (PhotonNetwork.GetRoomList().Length > 0)  
+        if (PhotonNetwork.otherPlayers.Length == 0)  
         {
+            PhotonNetwork.player.SetTeam(PunTeams.Team.blue);
+        }
+        else if (PhotonNetwork.player.GetTeam() != PunTeams.Team.blue)
+        {
+            PhotonNetwork.player.SetTeam(PunTeams.Team.red);
             startPosition = VisitorSpawnPoint.position;
             soccerClub = visitorMaterial;
         }
+
         player = PhotonNetwork.Instantiate("SoccerPlayer", startPosition, Quaternion.identity, 0);
         player.GetComponent<PlayerNetworkMover> ().RespawnMe += StartSpawnProcess;
         player.GetComponent<PlayerNetworkMover> ().SendNetworkMessage += AddMessage;

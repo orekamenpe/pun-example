@@ -23,11 +23,11 @@ public class SoccerBallController : MonoBehaviour {
         SoccerPlayerController spc = other.gameObject.GetComponent<SoccerPlayerController>();
         if (spc)
         {
-            other.gameObject.GetComponent<PlayerNetworkMover>().takeBall();
+            other.gameObject.GetComponent<PlayerNetworkMover>().TakeBall();
         }
     }
 
-    public void holdBall(GameObject player)
+    public void HoldBall(GameObject player)
     {
         spCollider.enabled = false;
         this.transform.parent = player.transform;

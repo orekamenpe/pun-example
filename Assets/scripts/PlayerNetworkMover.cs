@@ -8,9 +8,10 @@ public class PlayerNetworkMover : Photon.MonoBehaviour
     public delegate void SendMessage(string MessageOverlay);
     public event SendMessage SendNetworkMessage;
 
-    Vector3 position;
-    Quaternion rotation;
-    float smoothing = 10f;
+    Vector3 position = new Vector3(6,6,0);
+    Quaternion rotation = Quaternion.identity;
+    float smoothing = 5f;
+    public bool hasBall = false;
 
     bool initialLoad = true;
 
@@ -37,11 +38,8 @@ public class PlayerNetworkMover : Photon.MonoBehaviour
 
         while(true)
         {
-            if (position != Vector3.zero)
-            {
-                transform.position = Vector3.Lerp(transform.position, position, Time.deltaTime * smoothing);
-                transform.rotation = Quaternion.Lerp(transform.rotation, rotation, Time.deltaTime * smoothing);
-            }
+            transform.position = Vector3.Lerp(transform.position, position, Time.deltaTime * smoothing);
+            transform.rotation = Quaternion.Lerp(transform.rotation, rotation, Time.deltaTime * smoothing);
 
             yield return null;
         }
@@ -63,13 +61,14 @@ public class PlayerNetworkMover : Photon.MonoBehaviour
 
 
     [PunRPC]
-    public void takeBall()
+    public void TakeBall()
     {
-        SoccerGameManager.instance.soccerBall.holdBall(this.gameObject);
+        SoccerGameManager.instance.soccerBall.HoldBall(this.gameObject);
+        hasBall = true;
 
         if (photonView.isMine)
         {
-            photonView.RPC("takeBall", PhotonTargets.OthersBuffered, null );
+            photonView.RPC("TakeBall", PhotonTargets.OthersBuffered, null );
         }   
     }
 }
