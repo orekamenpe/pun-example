@@ -6,6 +6,11 @@ public class SoccerPlayerController : Photon.MonoBehaviour {
     public float speed = 5.0f;
     private Rigidbody rgbody;
 
+    [SerializeField]
+    Material localMaterial;
+    [SerializeField]
+    Material visitorMaterial;
+
     // Use this for initialization
     void Start ()
     {
@@ -43,5 +48,15 @@ public class SoccerPlayerController : Photon.MonoBehaviour {
         }
     }
 
-
+    public void changeTeam(PunTeams.Team team)
+    {
+        if (team == PunTeams.Team.blue)
+        {
+            GetComponent<Renderer>().material = localMaterial;
+        }
+        else
+        {
+            GetComponent<Renderer>().material = visitorMaterial;
+        }
+    }
 }

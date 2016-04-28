@@ -8,21 +8,37 @@ public class PlayerNetworkMover : Photon.MonoBehaviour
     public delegate void SendMessage(string MessageOverlay);
     public event SendMessage SendNetworkMessage;
 
-    Vector3 position = new Vector3(6,6,0);
+    Vector3 position = new Vector3(0,6,6);
     Quaternion rotation = Quaternion.identity;
     float smoothing = 5f;
     public bool hasBall = false;
 
+    Rigidbody rgbody;
+
+    private float lastSynchronizationTime = 0f;
+    private float syncDelay = 0f;
+    private float syncTime = 0f;
+    private Vector3 syncStartPosition = Vector3.zero;
+    private Vector3 syncEndPosition = Vector3.zero;
+
     bool initialLoad = true;
+
+    void Awake()
+    {
+        rgbody = GetComponent<Rigidbody>();
+    }
 
     void Start()
     {
-        if(photonView.isMine)
+        
+        if (photonView.isMine)
         {
-            GetComponent<Rigidbody> ().useGravity = true;
+            rgbody.useGravity = true;
+            GetComponent<SoccerPlayerController>().changeTeam(PhotonNetwork.player.GetTeam());
         }
         else
         {
+            GetComponent<SoccerPlayerController>().changeTeam(PhotonNetwork.otherPlayers[0].GetTeam());
             StartCoroutine("UpdateData");
         }
     }
@@ -32,13 +48,14 @@ public class PlayerNetworkMover : Photon.MonoBehaviour
         if(initialLoad)
         {
             initialLoad = false;
-            transform.position = position;
+            rgbody.position = position;
             transform.rotation = rotation;
         }
 
         while(true)
         {
-            transform.position = Vector3.Lerp(transform.position, position, Time.deltaTime * smoothing);
+            syncTime += Time.deltaTime;
+            rgbody.position = Vector3.Lerp(syncStartPosition, syncEndPosition, syncTime / syncDelay);
             transform.rotation = Quaternion.Lerp(transform.rotation, rotation, Time.deltaTime * smoothing);
 
             yield return null;
@@ -49,13 +66,19 @@ public class PlayerNetworkMover : Photon.MonoBehaviour
     {
         if (stream.isWriting)
         {
-            stream.SendNext(transform.position);
+            stream.SendNext(rgbody.position);
             stream.SendNext(transform.rotation);
         }
         else
         {
-            position = (Vector3)stream.ReceiveNext();
+            syncEndPosition = (Vector3)stream.ReceiveNext();
             rotation = (Quaternion)stream.ReceiveNext();
+
+            syncStartPosition = rgbody.position;
+
+            syncTime = 0f;
+            syncDelay = Time.time - lastSynchronizationTime;
+            lastSynchronizationTime = Time.time;
         }
     }
 

@@ -21,11 +21,6 @@ public class NetworkManager : MonoBehaviour
     const int messageCount = 6;
     PhotonView photonView;
 
-    [SerializeField]
-    Material localMaterial;
-    [SerializeField]
-    Material visitorMaterial;
-
     PunTeams punTeams;
 
     void Start () 
@@ -98,24 +93,24 @@ public class NetworkManager : MonoBehaviour
         yield return new WaitForSeconds(respawnTime);
 
         Vector3 startPosition = localSpawnPoint.position;
-        Material soccerClub = localMaterial;
 
         if (PhotonNetwork.otherPlayers.Length == 0)  
         {
             PhotonNetwork.player.SetTeam(PunTeams.Team.blue);
         }
-        else if (PhotonNetwork.player.GetTeam() != PunTeams.Team.blue)
+        else if (PhotonNetwork.otherPlayers[0].GetTeam() == PunTeams.Team.blue)
         {
             PhotonNetwork.player.SetTeam(PunTeams.Team.red);
             startPosition = VisitorSpawnPoint.position;
-            soccerClub = visitorMaterial;
+        }
+        else
+        {
+            PhotonNetwork.player.SetTeam(PunTeams.Team.blue);
         }
 
         player = PhotonNetwork.Instantiate("SoccerPlayer", startPosition, Quaternion.identity, 0);
         player.GetComponent<PlayerNetworkMover> ().RespawnMe += StartSpawnProcess;
         player.GetComponent<PlayerNetworkMover> ().SendNetworkMessage += AddMessage;
-
-        player.GetComponent<Renderer>().material = soccerClub;
 
         AddMessage ("Spawned player: " + PhotonNetwork.player.name);
     }
@@ -135,5 +130,9 @@ public class NetworkManager : MonoBehaviour
         messageWindow.text = "";
         foreach(string m in messages)
             messageWindow.text += m + "\n";
+    }
+
+    void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
+    {
     }
 }

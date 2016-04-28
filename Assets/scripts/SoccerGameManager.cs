@@ -4,7 +4,6 @@ using System.Collections;
 public class SoccerGameManager : Photon.MonoBehaviour {
 
     public SoccerBallController soccerBall;
-    public PlayerNetworkMover[] soccerPlayers;
 
     public static SoccerGameManager instance = null;              //Static instance of GameManager which allows it to be accessed by any other script.
     
@@ -46,9 +45,7 @@ public class SoccerGameManager : Photon.MonoBehaviour {
         }
     }
 
-    public void AddSoccerPlayer(PlayerNetworkMover pnm)
+    void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
     {
-        
     }
-
 }
