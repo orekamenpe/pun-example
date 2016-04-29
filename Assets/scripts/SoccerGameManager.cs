@@ -11,6 +11,7 @@ public class SoccerGameManager : Photon.MonoBehaviour {
     int visitorScore = 0;
 
     public TextMesh Score;
+    public GameObject ResetButton;
 
     //Awake is always called before any Start functions
     void Awake()
@@ -31,7 +32,15 @@ public class SoccerGameManager : Photon.MonoBehaviour {
         DontDestroyOnLoad(gameObject);
     }
 
+    void Start()
+    {
+        SetActiveResetButtonEnable(false);
+    }
 
+    public void SetActiveResetButtonEnable(bool status)
+    {
+        ResetButton.SetActive(status);
+    }
 
     //Update is called every frame.
     void Update()
@@ -60,6 +69,11 @@ public class SoccerGameManager : Photon.MonoBehaviour {
     public void ResetGame()
     {
         photonView.RPC("NewGame", PhotonTargets.All, null);
+    }
+
+    public void BeginGame()
+    {
+        photonView.RPC("RestoreGame", PhotonTargets.All, null);
     }
 
     [PunRPC]

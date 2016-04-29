@@ -14,6 +14,7 @@ public class SoccerPlayerController : Photon.MonoBehaviour {
     // Use this for initialization
     void Start ()
     {
+        SoccerGameManager.instance.SetActiveResetButtonEnable(true);
         rgbody = GetComponent<Rigidbody>();
     }
 	

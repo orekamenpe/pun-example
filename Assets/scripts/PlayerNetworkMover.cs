@@ -31,7 +31,6 @@ public class PlayerNetworkMover : Photon.MonoBehaviour
 
     void Start()
     {
-        
         if (photonView.isMine)
         {
             rgbody.useGravity = true;
@@ -51,6 +50,8 @@ public class PlayerNetworkMover : Photon.MonoBehaviour
             initialLoad = false;
             rgbody.position = position;
             transform.rotation = rotation;
+
+            SoccerGameManager.instance.BeginGame();
         }
 
         while(true)
