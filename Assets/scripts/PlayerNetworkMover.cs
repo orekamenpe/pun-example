@@ -11,6 +11,7 @@ public class PlayerNetworkMover : Photon.MonoBehaviour
     Vector3 position = new Vector3(0,6,6);
     Quaternion rotation = Quaternion.identity;
     float smoothing = 5f;
+
     public bool hasBall = false;
 
     Rigidbody rgbody;

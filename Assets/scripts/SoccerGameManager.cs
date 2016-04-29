@@ -6,7 +6,12 @@ public class SoccerGameManager : Photon.MonoBehaviour {
     public SoccerBallController soccerBall;
 
     public static SoccerGameManager instance = null;              //Static instance of GameManager which allows it to be accessed by any other script.
-    
+
+    int localScore = 0;
+    int visitorScore = 0;
+
+    public TextMesh Score;
+
     //Awake is always called before any Start functions
     void Awake()
     {
@@ -35,17 +40,70 @@ public class SoccerGameManager : Photon.MonoBehaviour {
     }
 
     [PunRPC]
+    public void AddGoal(PunTeams.Team team)
+    {
+        if (team == PunTeams.Team.blue)
+        {
+            localScore++;
+        }
+        else
+        {
+            visitorScore++;
+        }
+
+        RestoreGame();
+
+        photonView.RPC("AddGoal", PhotonTargets.Others, (int)team);
+    }
+
+        
     public void ResetGame()
+    {
+        photonView.RPC("NewGame", PhotonTargets.All, null);
+    }
+
+    [PunRPC]
+    void RestoreGame()
     {
         soccerBall.resetGame();
 
-        if (photonView.isMine)
-        {
-            photonView.RPC("ResetGame", PhotonTargets.Others, null);
-        }
+        RespawnPlayersPosition();
+    }
+
+    [PunRPC]
+    void NewGame()
+    {
+        soccerBall.resetGame();
+
+        localScore = 0;
+        visitorScore = 0;
+
+        RespawnPlayersPosition();
     }
 
     void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
     {
+        if (stream.isWriting)
+        {
+            stream.SendNext(localScore);
+            stream.SendNext(visitorScore);
+        }
+        else
+        {
+            localScore = (int)stream.ReceiveNext();
+            visitorScore = (int)stream.ReceiveNext();
+        }
+
+        printScore();
+    }
+
+    void printScore()
+    {
+        Score.text = localScore + " - " + visitorScore;
+    }
+
+    void RespawnPlayersPosition()
+    {
+        // TODO: respawn player to initial position
     }
 }
