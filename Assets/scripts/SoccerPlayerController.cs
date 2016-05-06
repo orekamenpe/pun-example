@@ -19,7 +19,7 @@ public class SoccerPlayerController : Photon.MonoBehaviour {
     }
 	
 	// Update is called once per frame
-	void Update ()
+	void FixedUpdate ()
     {
         if (photonView.isMine)
         {
